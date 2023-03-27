@@ -6,6 +6,7 @@ import folium
 from streamlit_folium import st_folium
 import geopandas as gpd
 import matplotlib.pyplot as plt
+
 from PIL import Image
 import warnings
 warnings.filterwarnings('ignore')
@@ -125,28 +126,24 @@ def display_map(df_jkt):
     return st_map
 
 
-def plot_tweet_count(df):
-    # Hitung jumlah sentiment per unique value sentiment, unique value tokoh tiap location
-    count_sentiment_tokoh_loc = df
+def plot_tokoh_sentiment(df, tokoh):
+    # Mengelompokkan berdasarkan tokoh dan sentiment, kemudian menghitung jumlah
+    result = df.groupby(['Tokoh', 'Sentiment'])['jumlah'].sum().reset_index()
 
-    # Plot peta choropleth dengan menggunakan jumlah tweet sebagai variabel
-    fig, ax = plt.subplots(figsize=(12,8))
-    df.plot(column=count_sentiment_tokoh_loc, cmap='OrRd', linewidth=0.5, ax=ax, edgecolor='grey', legend=True)
-
-    # Tambahkan judul dan label sumbu
-    ax.set_title('Jumlah Tweet per Sentiment, Tokoh, dan Lokasi', fontsize=16)
-    ax.set_xlabel('Longitude')
-    ax.set_ylabel('Latitude')
-
-    # Tampilkan plot
-    plt.show()
+    # Membuat barchart untuk tokoh yang dimaksud
+    df_tokoh = result[result['Tokoh'] == tokoh]
+    fig = go.Figure(
+        data=[go.Bar(x=df_tokoh['Sentiment'], y=df_tokoh['jumlah'])],
+        layout=go.Layout(title=tokoh)
+    )
+    st.plotly_chart(fig)
 
 
 
 
 def main():
     #TITLE
-    APP_TITLE = "Visualisasi Klasifikasi Sentimen Bakal Calon Presiden Indonesia 2024"
+    APP_TITLE = "Klasifikasi Opini publik di Twitter terhadap bakal calon Presiden Indonesia Tahun 2024 secara Real Time"
     st.set_page_config(APP_TITLE)
     st.title(APP_TITLE)
     #READ MYSQSL DATA
@@ -222,12 +219,19 @@ def main():
     with st.container():
         st.subheader("Jumlah Sentiment Positif terbanyak tiap Provinsi")
         display_map(fil)
+        plot_tokoh_sentiment(count_sentiment_tokoh_loc, 'Ganjar Pranowo')
+        
+        # col1, col2=st.columns(2)
+        # with col1:
+        #     plot_sentiment_by_tokoh(count_sentiment_tokoh_loc, 'Ganjar Pranowo')
+        # with col2:
+        #     plot_sentiment_by_tokoh(count_sentiment_tokoh_loc, 'Anies Baswedan')
         
                 
         
     
     #plot_tweet_count(merge2)
-    #st.write(fil)
+    st.write(print(count_sentiment_tokoh_loc))
     
 if __name__ == "__main__":
     main()
